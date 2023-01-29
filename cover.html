@@ -1,0 +1,390 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>repositories: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">goapps/repositories/articles.go (83.0%)</option>
+				
+				<option value="file1">goapps/repositories/comments.go (76.7%)</option>
+				
+				<option value="file2">goapps/services/article_service.go (95.8%)</option>
+				
+				<option value="file3">goapps/services/comment_service.go (75.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package repositories
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+        "time"
+
+        "goapps/models"
+)
+
+// use-case: ArticlesInterface
+type ArticlesInterface interface {
+        FindAll() ([]models.Article, error)
+        FindById(articleId int) (*models.Article, error)
+        Insert(article models.Article) error
+        UpdateNiceNum(articleId int) error
+}
+
+type Articles struct {
+        conn *sql.Conn
+}
+
+func NewArticles(conn *sql.Conn) ArticlesInterface <span class="cov8" title="1">{
+        return &amp;Articles{
+                conn: conn,
+        }
+}</span>
+
+func (a *Articles) FindAll() ([]models.Article, error) <span class="cov8" title="1">{
+        sqlText := fmt.Sprintf("SELECT article_id, title, contents, username, nice, created_at FROM %s;", ARTICLE_TBL)
+
+        rows, err := a.conn.QueryContext(context.Background(), sqlText)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var articles []models.Article
+        for rows.Next() </span><span class="cov8" title="1">{
+                var article models.Article
+
+                err := rows.Scan(&amp;article.ID, &amp;article.Title, &amp;article.Contents, &amp;article.UserName, &amp;article.NiceNum, &amp;article.CreateAt)
+                if err != nil || err == sql.ErrNoRows </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">articles = append(articles, article)</span>
+        }
+        <span class="cov8" title="1">if rows.Err() != nil </span><span class="cov0" title="0">{
+                return nil, rows.Err()
+        }</span>
+        <span class="cov8" title="1">if len(articles) == 0 </span><span class="cov0" title="0">{
+                return nil, sql.ErrNoRows
+        }</span>
+        <span class="cov8" title="1">return articles, nil</span>
+}
+
+func (a *Articles) FindById(articleId int) (*models.Article, error) <span class="cov8" title="1">{
+        sqlText := fmt.Sprintf("SELECT article_id, title, contents, username, nice, created_at FROM %s WHERE article_id = ?;", ARTICLE_TBL)
+
+        stmt, err := a.conn.PrepareContext(context.Background(), sqlText)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer stmt.Close()
+
+        row := stmt.QueryRow(articleId)
+
+        var article models.Article
+        err = row.Scan(&amp;article.ID, &amp;article.Title, &amp;article.Contents, &amp;article.UserName, &amp;article.NiceNum, &amp;article.CreateAt)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return &amp;article, nil</span>
+}
+
+func (a *Articles) Insert(article models.Article) error <span class="cov8" title="1">{
+        sqlText := fmt.Sprintf("INSERT INTO %s (article_id, title, contents, username, nice, created_at) VALUES (?, ?, ?, ?, ?, ?);", ARTICLE_TBL)
+
+        stmt, err := a.conn.PrepareContext(context.Background(), sqlText)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer stmt.Close()
+
+        _, err = stmt.Exec(article.ID, article.Title, article.Contents, article.UserName, 0, time.Now().Format("2006-01-02T15:04:05Z07:00"))
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (a *Articles) UpdateNiceNum(articleId int) error <span class="cov8" title="1">{
+        sqlText := fmt.Sprintf("UPDATE %s SET nice = nice + 1 WHERE article_id = ?;", ARTICLE_TBL)
+
+        stmt, err := a.conn.PrepareContext(context.Background(), sqlText)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer stmt.Close()
+
+        _, err = stmt.Exec(articleId)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package repositories
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+        "time"
+
+        "goapps/models"
+)
+
+// use-case: CommentInterface
+type CommentInterface interface {
+        Insert(comment models.Comment) error
+        FindByArticleId(articleId int) ([]models.Comment, error)
+}
+
+type Comments struct {
+        conn *sql.Conn
+}
+
+func NewComments(conn *sql.Conn) CommentInterface <span class="cov8" title="1">{
+        return &amp;Comments{
+                conn: conn,
+        }
+}</span>
+
+func (c *Comments) Insert(comment models.Comment) error <span class="cov8" title="1">{
+        sqlText := fmt.Sprintf("INSERT INTO %s (comment_id, article_id, message, created_at) VALUES (?, ?, ?, ?);", COMMENT_TBL)
+
+        stmt, err := c.conn.PrepareContext(context.Background(), sqlText)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer stmt.Close()
+
+        _, err = stmt.Exec(comment.CommentID, comment.ArticleID, comment.Message, time.Now().Format("2006-01-02T15:04:05Z07:00"))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (c *Comments) FindByArticleId(articleId int) ([]models.Comment, error) <span class="cov8" title="1">{
+        sqlText := fmt.Sprintf("SELECT comment_id, article_id, message, created_at FROM %s WHERE article_id = ?;", COMMENT_TBL)
+
+        stmt, err := c.conn.PrepareContext(context.Background(), sqlText)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer stmt.Close()
+
+        rows, err := stmt.Query(articleId)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">var comments []models.Comment
+        for rows.Next() </span><span class="cov8" title="1">{
+                var comment models.Comment
+
+                err := rows.Scan(&amp;comment.CommentID, &amp;comment.ArticleID, &amp;comment.Message, &amp;comment.CreateAt)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">comments = append(comments, comment)</span>
+        }
+        <span class="cov8" title="1">if rows.Err() != nil </span><span class="cov0" title="0">{
+                return nil, rows.Err()
+        }</span>
+        <span class="cov8" title="1">if len(comments) == 0 </span><span class="cov0" title="0">{
+                return nil, sql.ErrNoRows
+        }</span>
+        <span class="cov8" title="1">return comments, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package services
+
+import (
+        "database/sql"
+
+        "goapps/apperrors"
+        "goapps/models"
+        "goapps/repositories"
+)
+
+type ArticleService struct {
+        ArticlesInterface repositories.ArticlesInterface
+        CommentsInterface repositories.CommentInterface
+}
+
+func NewArticleService(conn *sql.Conn) *ArticleService <span class="cov0" title="0">{
+        return &amp;ArticleService{
+                ArticlesInterface: repositories.NewArticles(conn),
+                CommentsInterface: repositories.NewComments(conn),
+        }
+}</span>
+
+func (s *ArticleService) GetArticleDetail(articleId int) (*models.Article, error) <span class="cov8" title="1">{
+        article, err := s.ArticlesInterface.FindById(articleId)
+        if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                return nil, apperrors.SelectNoRowsErr.Wrap("No Rows Articles table. func: GetArticleDetail", err)
+        }</span>
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                return nil, apperrors.SelectErr.Wrap("Error Articles table select. func: GetArticleDetail", err)
+        }</span>
+
+        <span class="cov8" title="1">comment, err := s.CommentsInterface.FindByArticleId(articleId)
+        if err != nil </span><span class="cov8" title="1">{
+                if err != sql.ErrNoRows </span><span class="cov8" title="1">{
+                        return nil, apperrors.SelectErr.Wrap("Error Comments table select. func: GetArticleDetail", err)
+                }</span>
+        }
+
+        <span class="cov8" title="1">article.Comments = comment
+
+        return article, nil</span>
+}
+
+func (s *ArticleService) GetArticleList() ([]models.Article, error) <span class="cov8" title="1">{
+        articles, err := s.ArticlesInterface.FindAll()
+        if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                return nil, apperrors.SelectNoRowsErr.Wrap("No Rows Articles table. func: GetArticleList", err)
+        }</span>
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                return nil, apperrors.SelectErr.Wrap("Error Articles table select. func: GetArticleDetail", err)
+        }</span>
+        <span class="cov8" title="1">return articles, nil</span>
+}
+
+func (s *ArticleService) InsertArticle(article models.Article) error <span class="cov8" title="1">{
+        if err := s.ArticlesInterface.Insert(article); err != nil </span><span class="cov8" title="1">{
+                return apperrors.InsertErr.Wrap("Error Articles table insert. func: InsertArticle", err)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (s *ArticleService) UpdateArticleNiceNum(articleId int) error <span class="cov8" title="1">{
+        if err := s.ArticlesInterface.UpdateNiceNum(articleId); err != nil </span><span class="cov8" title="1">{
+                return apperrors.UpdateErr.Wrap("Error Articles table update. func: UpdateArticleNiceNum", err)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package services
+
+import (
+        "database/sql"
+
+        "goapps/apperrors"
+        "goapps/models"
+        "goapps/repositories"
+)
+
+type CommentService struct {
+        CommentsInterface repositories.CommentInterface
+}
+
+func NewCommentService(conn *sql.Conn) *CommentService <span class="cov0" title="0">{
+        return &amp;CommentService{
+                CommentsInterface: repositories.NewComments(conn),
+        }
+}</span>
+
+func (s *CommentService) InsertComment(comment models.Comment) error <span class="cov8" title="1">{
+        if err := s.CommentsInterface.Insert(comment); err != nil </span><span class="cov8" title="1">{
+                return apperrors.InsertErr.Wrap("Error Comment table insert. func: InsertComment", err)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

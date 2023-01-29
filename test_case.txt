@@ -1,0 +1,23 @@
+curl http://localhost:8080/article -X POST -d '{"article_id":1, "title":"first post.", "contents":"Are you seeing anyone?", "user_name":"saki"}'
+curl http://localhost:8080/article -X POST -d '{"article_id":2, "title":"second post.", "contents":"Hello, second post", "user_name":"saki"}'
+
+curl http://localhost:8080/article -X POST -d '{"article_id":3, "title":"3d post.", "contents":"Say you sorry.", "user_name":"asuka"}'
+
+curl http://localhost:8080/article/list/0 -X GET
+
+curl http://localhost:8080/article/1 -X GET
+curl http://localhost:8080/article/999 -X GET
+
+
+curl http://localhost:8080/article/comment -X POST -d '{"comment_id":1, "article_id":3,"message":"here you go"}'
+curl http://localhost:8080/article/3 -X GET
+
+curl http://localhost:8080/article/comment -X POST -d '{"comment_id":2, "article_id":3,"message":"hello, say you hello."}'
+
+
+curl http://localhost:8080/article/nice -X POST -d '{"article_id":1, "title":"", "contents":"", "user_name":""}'
+curl http://localhost:8080/article/nice -X POST -d '{"article_id":1, "title":null, "contents":null, "user_name":null}'
+curl http://localhost:8080/article/nice -X POST -d '{"article_id":1}'
+
+curl http://localhost:8080/article/1 -X GET
+

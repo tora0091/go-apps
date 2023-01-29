@@ -1,0 +1,318 @@
+swagger: "2.0"
+info:
+  description: "記事管理API"
+  version: "1.0.0"
+  title: "Articles API"
+tags:
+- name: "Articles"
+  description: "記事全般に関するAPI"
+paths:
+  /articles/list/{page}:
+    get:
+      tags:
+        - "Articles"
+      summary: "全記事取得"
+      description: "全ての記事を取得します"
+      parameters:
+      - name: "page"
+        in: "path"
+        description: "取得するページ番号(指定したページ番号に関係なく全ての記事を取得)"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "成功時のレスポンス"
+          schema:
+            type: "object"
+            properties:
+              status:
+                type: "integer"
+                format: "int64"
+                example: 200
+              data:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Article"
+              err:
+                example: null
+        500:
+          description: "サーバ側でエラーが発生"
+          schema:
+            $ref: "#/definitions/ServerError"
+  /articles/{article_id}:
+    get:
+      tags:
+        - "Articles"
+      summary: "記事詳細取得"
+      description: "指定したIDの記事詳細を取得します"
+      parameters:
+      - name: "article_id"
+        in: "path"
+        description: "取得する記事ID"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "成功時のレスポンス"
+          schema:
+            type: "object"
+            properties:
+              status:
+                type: "integer"
+                format: "int64"
+                example: 200
+              data:
+                $ref: "#/definitions/Article"
+              err:
+                example: null
+        400:
+          description: "パラメータ不正時のレスポンス"
+          schema:
+            $ref: "#/definitions/ParamsError"
+        500:
+          description: "サーバ側でエラーが発生"
+          schema:
+            $ref: "#/definitions/ServerError"
+  /article:
+    post:
+      tags:
+        - "Articles"
+      summary: "記事投稿"
+      description: "記事を投稿します"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: ""
+        required: true
+        schema:
+          $ref: "#definitions/ArticlePost"
+      responses:
+        200:
+          description: "成功時のレスポンス"
+          schema:
+            type: "object"
+            properties:
+              status:
+                type: "integer"
+                format: "int64"
+                example: 200
+              data:
+                $ref: "#definitions/ArticlePost"
+              err:
+                example: null
+        500:
+          description: "SQL Insert Error"
+          schema:
+            $ref: "#/definitions/ServerError"
+        502:
+          description: "リクエストjson解析エラー"
+          schema:
+            $ref: "#/definitions/JsonError"
+  /article/nice:
+    post:
+      tags:
+        - "Articles"
+      summary: "記事にいいね"
+      description: "記事にいいねを登録します"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: ""
+        required: true
+        schema:
+          type: "object"
+          properties:
+            article_id:
+              type: "integer"
+              format: "int64"
+              example: 11
+      responses:
+        200:
+          description: "成功時のレスポンス"
+          schema:
+            type: "object"
+            properties:
+              status:
+                type: "integer"
+                format: "int64"
+                example: 200
+              data:
+                $ref: "#definitions/ArticlePost"
+              err:
+                example: null
+        500:
+          description: "SQL Insert Error"
+          schema:
+            $ref: "#/definitions/ServerError"
+        502:
+          description: "リクエストjson解析エラー"
+          schema:
+            $ref: "#/definitions/JsonError"
+  /article/comment:
+    post:
+      tags:
+        - "Articles"
+      summary: "記事のコメント投稿"
+      description: "記事に対するコメントを投稿します"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: ""
+        required: true
+        schema:
+          $ref: "#definitions/CommentPost"
+      responses:
+        200:
+          description: "成功時のレスポンス"
+          schema:
+            type: "object"
+            properties:
+              status:
+                type: "integer"
+                format: "int64"
+                example: 200
+              data:
+                $ref: "#/definitions/CommentPost"
+              err:
+                example: null
+        400:
+          description: "パラメータ不正時のレスポンス"
+          schema:
+            $ref: "#/definitions/ParamsError"
+        500:
+          description: "サーバ側でエラーが発生"
+          schema:
+            $ref: "#/definitions/ServerError"
+definitions:
+  Article:
+    type: "object"
+    properties:
+      article_id:
+        type: "integer"
+        format: "int64"
+        example: 1
+      title:
+        type: "string"
+        example: "今日の股関節状況を報告せよ"
+      contents:
+        type: "string"
+        example: "今日も左股関節が非常に痛いです、それにともなって膝も痛いです"
+      user_name:
+        type: "string"
+        example: "saki-san"
+      nice_num:
+        type: "integer"
+        format: "int64"
+        example: 34
+      comments:
+        type: "array"
+        items:
+          $ref: "#/definitions/Comment"
+      create_at:
+        type: "string"
+        format: "date"
+        example: "2023-01-10T23:33:12+09:00"
+  Comment:
+    type: "object"
+    properties:
+      comment_id:
+        type: "integer"
+        format: "int64"
+        example: 1
+      article_id:
+        type: "integer"
+        format: "int64"
+        example: 1
+      message:
+        type: "string"
+        example: "めっちゃよかったよね！！！"
+      create_at:
+        type: "string"
+        format: "date"
+        example: "2023-01-10T23:33:12+09:00"
+  ArticlePost:
+    type: "object"
+    properties:
+      article_id:
+        type: "integer"
+        format: "int64"
+        example: 11
+      title:
+        type: "string"
+        example: "今日のおかず"
+      contents:
+        type: "string"
+        example: "ごはんはハンバーグがいいな！"
+      user_name:
+        type: "string"
+        example: "sakura"
+  CommentPost:
+    type: "object"
+    properties:
+      comment_id:
+        type: "integer"
+        format: "int64"
+        example: 1
+      article_id:
+        type: "integer"
+        format: "int64"
+        example: 3
+      message:
+        type: "string"
+        example: "カレーのほうが優勢です"
+  ParamsError:
+    type: "object"
+    properties:
+      status:
+        type: "integer"
+        format: "int64"
+        example: 400
+      data:
+        example: null
+      err:
+        type: "object"
+        properties:
+          error_code:
+            type: "string"
+            example: "S001"
+          error_message:
+            type: "string"
+            example: "パラメータ不正です"
+  ServerError:
+    type: "object"
+    properties:
+      status:
+        type: "integer"
+        format: "int64"
+        example: 500
+      data:
+        example: null
+      err:
+        type: "object"
+        properties:
+          error_code:
+            type: "string"
+            example: "S001"
+          error_message:
+            type: "string"
+            example: "SQLエラーが発生しました"
+  JsonError:
+    type: "object"
+    properties:
+      status:
+        type: "integer"
+        format: "int64"
+        example: 502
+      data:
+        example: null
+      err:
+        type: "object"
+        properties:
+          error_code:
+            type: "string"
+            example: "S001"
+          error_message:
+            type: "string"
+            example: "json解析エラーが発生しました"
